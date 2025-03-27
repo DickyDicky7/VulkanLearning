@@ -19,7 +19,46 @@ const bool enableValidationLayers = 0;
 const bool enableValidationLayers = 1;
 #endif // NDEBUG
 
+static inline bool CheckSupportOfValidationLayers()
+{
+    std::uint32_t layerCount = 0;
+//  std::uint32_t layerCount = 0;
+    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+//  vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+//  std::vector<VkLayerProperties> availableLayers(layerCount);
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+//  vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+    for (const auto& validationLayer : validationLayers)
+//  for (const auto& validationLayer : validationLayers)
+    {
+        bool layerFound = false;
+//      bool layerFound = false;
+        for (const auto& availableLayer : availableLayers)
+//      for (const auto& availableLayer : availableLayers)
+        {
+            if (std::strcmp(validationLayer, availableLayer.layerName) == 0)
+//          if (std::strcmp(validationLayer, availableLayer.layerName) == 0)
+            {
+                layerFound = true;
+//              layerFound = true;
+                break;
+//              break;
+            }
+        }
+        if (!layerFound)
+//      if (!layerFound)
+        {
+            return false;
+//          return false;
+        }
+    }
+
+    return true;
+//  return true;
+}
 
 struct SceneData
 {
@@ -46,6 +85,12 @@ static inline void InitWindow(SceneData& sd)
 
 static inline void InitVulkan(SceneData& sd)
 {
+    if (enableValidationLayers && !CheckSupportOfValidationLayers())
+    {
+        throw std::runtime_error("validation layers requested but not available!");
+//      throw std::runtime_error("validation layers requested but not available!");
+    }
+
     // Create Vulkan Instance - connection between application and Vulkan driver
     // Create Vulkan Instance - connection between application and Vulkan driver
     VkApplicationInfo vkApplicationInfo
@@ -64,19 +109,27 @@ static inline void InitVulkan(SceneData& sd)
 //      .apiVersion         = VK_API_VERSION_1_0,
     };
 
-    std::uint32_t  enabledExtensionCount = 0;
-//  std::uint32_t  enabledExtensionCount = 0;
-    const char** ppEnabledExtensionNames;
-//  const char** ppEnabledExtensionNames;
+    std::uint32_t enabledExtensionCount = 0;
+//  std::uint32_t enabledExtensionCount = 0;
+    const char* const* ppEnabledExtensionNames;
+//  const char* const* ppEnabledExtensionNames;
     ppEnabledExtensionNames = glfwGetRequiredInstanceExtensions(&enabledExtensionCount);
 //  ppEnabledExtensionNames = glfwGetRequiredInstanceExtensions(&enabledExtensionCount);
 
-    std::uint32_t  enabledLayerCount = 0;
-//  std::uint32_t  enabledLayerCount = 0;
-    const char** ppEnabledLayerNames;
-//  const char** ppEnabledLayerNames;
+    std::uint32_t enabledLayerCount = 0;
+//  std::uint32_t enabledLayerCount = 0;
+    const char* const* ppEnabledLayerNames;
+//  const char* const* ppEnabledLayerNames;
     ppEnabledLayerNames = nullptr;
 //  ppEnabledLayerNames = nullptr;
+
+    if (enableValidationLayers)
+    {
+        enabledLayerCount = static_cast<std::uint32_t>(validationLayers.size());
+//      enabledLayerCount = static_cast<std::uint32_t>(validationLayers.size());
+        ppEnabledLayerNames = validationLayers.data();
+//      ppEnabledLayerNames = validationLayers.data();
+    }
 
     VkInstanceCreateInfo vkInstanceCreateInfo
     {
