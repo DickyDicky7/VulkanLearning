@@ -60,8 +60,45 @@ static inline bool CheckSupportOfValidationLayers()
 //  return true;
 }
 
+static inline std::vector<const char*> GetRequiredExtensions()
+{
+    std::uint32_t enabledExtensionCount = 0;
+//  std::uint32_t enabledExtensionCount = 0;
+    const char* const* ppEnabledExtensionNames;
+//  const char* const* ppEnabledExtensionNames;
+    ppEnabledExtensionNames = glfwGetRequiredInstanceExtensions(&enabledExtensionCount);
+//  ppEnabledExtensionNames = glfwGetRequiredInstanceExtensions(&enabledExtensionCount);
+
+    std::vector<const char*> extensions(ppEnabledExtensionNames, ppEnabledExtensionNames + enabledExtensionCount);
+//  std::vector<const char*> extensions(ppEnabledExtensionNames, ppEnabledExtensionNames + enabledExtensionCount);
+
+    if (enableValidationLayers)
+    {
+        extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+//      extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    }
+
+    return extensions;
+//  return extensions;
+}
+
+static
+  VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+//VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+{
+    if (messageSeverity >= VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+    {
+        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl << std::endl;
+//      std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl << std::endl;
+    }
+        return VK_FALSE;
+//      return VK_FALSE;
+}
+
 struct SceneData
 {
+    VkDebugUtilsMessengerEXT debugMessenger;
+//  VkDebugUtilsMessengerEXT debugMessenger;
     VkInstance  vkInstance;
 //  VkInstance  vkInstance;
     GLFWwindow* glfwWindow;
@@ -109,12 +146,12 @@ static inline void InitVulkan(SceneData& sd)
 //      .apiVersion         = VK_API_VERSION_1_0,
     };
 
-    std::uint32_t enabledExtensionCount = 0;
-//  std::uint32_t enabledExtensionCount = 0;
-    const char* const* ppEnabledExtensionNames;
-//  const char* const* ppEnabledExtensionNames;
-    ppEnabledExtensionNames = glfwGetRequiredInstanceExtensions(&enabledExtensionCount);
-//  ppEnabledExtensionNames = glfwGetRequiredInstanceExtensions(&enabledExtensionCount);
+    const std::vector<const char*>& requiredExtensions = GetRequiredExtensions();
+//  const std::vector<const char*>& requiredExtensions = GetRequiredExtensions();
+    std::uint32_t enabledExtensionCount = static_cast<std::uint32_t>(requiredExtensions.size());
+//  std::uint32_t enabledExtensionCount = static_cast<std::uint32_t>(requiredExtensions.size());
+    const char* const* ppEnabledExtensionNames = requiredExtensions.data();
+//  const char* const* ppEnabledExtensionNames = requiredExtensions.data();
 
     std::uint32_t enabledLayerCount = 0;
 //  std::uint32_t enabledLayerCount = 0;
@@ -147,6 +184,25 @@ static inline void InitVulkan(SceneData& sd)
 //      .ppEnabledExtensionNames = ppEnabledExtensionNames,
     };
 
+    VkDebugUtilsMessengerCreateInfoEXT
+    vkDebugUtilsMessengerCreateInfoEXTMain{};
+    if (enableValidationLayers)
+    {
+        vkDebugUtilsMessengerCreateInfoEXTMain.sType = VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+//      vkDebugUtilsMessengerCreateInfoEXTMain.sType = VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+        vkDebugUtilsMessengerCreateInfoEXTMain.messageSeverity = VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+//      vkDebugUtilsMessengerCreateInfoEXTMain.messageSeverity = VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+        vkDebugUtilsMessengerCreateInfoEXTMain.messageType = VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+//      vkDebugUtilsMessengerCreateInfoEXTMain.messageType = VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+        vkDebugUtilsMessengerCreateInfoEXTMain.pfnUserCallback = DebugCallback,
+//      vkDebugUtilsMessengerCreateInfoEXTMain.pfnUserCallback = DebugCallback,
+        vkDebugUtilsMessengerCreateInfoEXTMain.pUserData = nullptr, // Optional
+//      vkDebugUtilsMessengerCreateInfoEXTMain.pUserData = nullptr, // Optional
+
+        vkInstanceCreateInfo.pNext = &vkDebugUtilsMessengerCreateInfoEXTMain;
+//      vkInstanceCreateInfo.pNext = &vkDebugUtilsMessengerCreateInfoEXTMain;
+    }
+
     VkResult vkResult = vkCreateInstance(&vkInstanceCreateInfo, nullptr, &sd.vkInstance);
 //  VkResult vkResult = vkCreateInstance(&vkInstanceCreateInfo, nullptr, &sd.vkInstance);
 
@@ -158,6 +214,48 @@ static inline void InitVulkan(SceneData& sd)
     {
         throw std::runtime_error("!create vulkan instance failure!");
     }
+
+
+    if (enableValidationLayers)
+    {
+        VkDebugUtilsMessengerCreateInfoEXT vkDebugUtilsMessengerCreateInfoEXT
+        {
+            .sType = VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+//          .sType = VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+            .messageSeverity = VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+//          .messageSeverity = VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+            .messageType = VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+//          .messageType = VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+            .pfnUserCallback = DebugCallback,
+//          .pfnUserCallback = DebugCallback,
+            .pUserData = nullptr, // Optional
+//          .pUserData = nullptr, // Optional
+        };
+
+        PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(sd.vkInstance, "vkCreateDebugUtilsMessengerEXT");
+//      PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(sd.vkInstance, "vkCreateDebugUtilsMessengerEXT");
+        VkResult createDebugUtilsMessengerEXTResult;
+//      VkResult createDebugUtilsMessengerEXTResult;
+        if (vkCreateDebugUtilsMessengerEXT != nullptr)
+//      if (vkCreateDebugUtilsMessengerEXT != nullptr)
+        {
+            createDebugUtilsMessengerEXTResult  = vkCreateDebugUtilsMessengerEXT(sd.vkInstance, &vkDebugUtilsMessengerCreateInfoEXT, nullptr, &sd.debugMessenger);
+//          createDebugUtilsMessengerEXTResult  = vkCreateDebugUtilsMessengerEXT(sd.vkInstance, &vkDebugUtilsMessengerCreateInfoEXT, nullptr, &sd.debugMessenger);
+        }
+        else
+        {
+            createDebugUtilsMessengerEXTResult  = VkResult::VK_ERROR_EXTENSION_NOT_PRESENT;
+//          createDebugUtilsMessengerEXTResult  = VkResult::VK_ERROR_EXTENSION_NOT_PRESENT;
+        }
+        if (createDebugUtilsMessengerEXTResult != VkResult::VK_SUCCESS)
+//      if (createDebugUtilsMessengerEXTResult != VkResult::VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to set up debug messenger!");
+//          throw std::runtime_error("failed to set up debug messenger!");
+        }
+    }
+
+
 }
 
 static inline void MainLoop(SceneData& sd)
@@ -171,6 +269,18 @@ static inline void MainLoop(SceneData& sd)
 
 static inline void CleansUp(SceneData& sd)
 {
+    if (enableValidationLayers)
+    {
+        PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(sd.vkInstance, "vkDestroyDebugUtilsMessengerEXT");
+//      PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(sd.vkInstance, "vkDestroyDebugUtilsMessengerEXT");
+        if (vkDestroyDebugUtilsMessengerEXT != nullptr)
+//      if (vkDestroyDebugUtilsMessengerEXT != nullptr)
+        {
+            vkDestroyDebugUtilsMessengerEXT(sd.vkInstance, sd.debugMessenger, nullptr);
+//          vkDestroyDebugUtilsMessengerEXT(sd.vkInstance, sd.debugMessenger, nullptr);
+        }
+    }
+
     vkDestroyInstance(sd.vkInstance, nullptr);
 //  vkDestroyInstance(sd.vkInstance, nullptr);
     glfwDestroyWindow(sd.glfwWindow);
