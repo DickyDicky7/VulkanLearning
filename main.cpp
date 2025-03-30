@@ -1,7 +1,8 @@
 # define  GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-
+  #include <optional>
+//#include <optional>
   #include <iostream>
 //#include <iostream>
   #include <vector>
@@ -95,8 +96,16 @@ static
 //      return VK_FALSE;
 }
 
+struct QueueFamilyIndices
+{
+    std::optional<std::uint32_t> graphicsFamily;
+//  std::optional<std::uint32_t> graphicsFamily;
+};
+
 struct SceneData
 {
+    VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
+//  VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT debugMessenger;
 //  VkDebugUtilsMessengerEXT debugMessenger;
     VkInstance  vkInstance;
@@ -105,9 +114,81 @@ struct SceneData
 //  GLFWwindow* glfwWindow;
     const char* windowTitle;
 //  const char* windowTitle;
+    QueueFamilyIndices queueFamilyIndices;
+//  QueueFamilyIndices queueFamilyIndices;
     std::uint32_t windowW = 800;
     std::uint32_t windowH = 600;
 };
+
+static inline bool IsComplete(const QueueFamilyIndices& queueFamilyIndices)
+{
+    return queueFamilyIndices.graphicsFamily.has_value();
+//  return queueFamilyIndices.graphicsFamily.has_value();
+}
+
+static inline QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vkPhysicalDevice)
+{
+    QueueFamilyIndices queueFamilyIndices{};
+//  QueueFamilyIndices queueFamilyIndices{};
+
+    std::uint32_t queueFamilyCount = 0;
+//  std::uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, nullptr);
+//  vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+//  std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, queueFamilies.data());
+//  vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, queueFamilies.data());
+
+    int i = 0;
+//  int i = 0;
+    for (const VkQueueFamilyProperties& queueFamily : queueFamilies)
+//  for (const VkQueueFamilyProperties& queueFamily : queueFamilies)
+    {
+        if (queueFamily.queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT)
+//      if (queueFamily.queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT)
+        {
+            queueFamilyIndices.graphicsFamily = i;
+//          queueFamilyIndices.graphicsFamily = i;
+        }
+        if (IsComplete(queueFamilyIndices))
+//      if (IsComplete(queueFamilyIndices))
+        {
+            break;
+//          break;
+        }
+        ++i;
+//      ++i;
+    }
+
+    return queueFamilyIndices;
+//  return queueFamilyIndices;
+}
+
+static inline bool IsVkPhysicalDeviceSuitable(VkPhysicalDevice vkPhysicalDevice)
+{
+//    VkPhysicalDeviceProperties vkPhysicalDeviceProperties;
+////  VkPhysicalDeviceProperties vkPhysicalDeviceProperties;
+//    vkGetPhysicalDeviceProperties(vkPhysicalDevice, &vkPhysicalDeviceProperties);
+////  vkGetPhysicalDeviceProperties(vkPhysicalDevice, &vkPhysicalDeviceProperties);
+//
+//    VkPhysicalDeviceFeatures vkPhysicalDeviceFeatures;
+////  VkPhysicalDeviceFeatures vkPhysicalDeviceFeatures;
+//    vkGetPhysicalDeviceFeatures(vkPhysicalDevice, &vkPhysicalDeviceFeatures);
+////  vkGetPhysicalDeviceFeatures(vkPhysicalDevice, &vkPhysicalDeviceFeatures);
+//
+//    return vkPhysicalDeviceProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && vkPhysicalDeviceFeatures.geometryShader;
+////  return vkPhysicalDeviceProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && vkPhysicalDeviceFeatures.geometryShader;
+
+//    return true;
+////  return true;
+
+    const QueueFamilyIndices& queueFamilyIndices = FindQueueFamilies(vkPhysicalDevice);
+//  const QueueFamilyIndices& queueFamilyIndices = FindQueueFamilies(vkPhysicalDevice);
+    return IsComplete(queueFamilyIndices);
+//  return IsComplete(queueFamilyIndices);
+}
 
 static inline void InitWindow(SceneData& sd)
 {
