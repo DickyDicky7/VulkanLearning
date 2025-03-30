@@ -337,6 +337,43 @@ static inline void InitVulkan(SceneData& sd)
     }
 
 
+
+    std::uint32_t deviceCount = 0;
+//  std::uint32_t deviceCount = 0;
+    vkEnumeratePhysicalDevices(sd.vkInstance, &deviceCount, nullptr);
+//  vkEnumeratePhysicalDevices(sd.vkInstance, &deviceCount, nullptr);
+
+    if (deviceCount == 0)
+//  if (deviceCount == 0)
+    {
+        throw std::runtime_error("failed to find GPUs with Vulkan support!");
+//      throw std::runtime_error("failed to find GPUs with Vulkan support!");
+    }
+
+    std::vector<VkPhysicalDevice> vkPhysicalDevices(deviceCount);
+//  std::vector<VkPhysicalDevice> vkPhysicalDevices(deviceCount);
+    vkEnumeratePhysicalDevices(sd.vkInstance, &deviceCount, vkPhysicalDevices.data());
+//  vkEnumeratePhysicalDevices(sd.vkInstance, &deviceCount, vkPhysicalDevices.data());
+
+    for (const VkPhysicalDevice& vkPhysicalDevice : vkPhysicalDevices)
+//  for (const VkPhysicalDevice& vkPhysicalDevice : vkPhysicalDevices)
+    {
+        if (IsVkPhysicalDeviceSuitable(vkPhysicalDevice))
+//      if (IsVkPhysicalDeviceSuitable(vkPhysicalDevice))
+        {
+            sd.vkPhysicalDevice = vkPhysicalDevice;
+//          sd.vkPhysicalDevice = vkPhysicalDevice;
+            break;
+//          break;
+        }
+    }
+
+    if (sd.vkPhysicalDevice == VK_NULL_HANDLE)
+//  if (sd.vkPhysicalDevice == VK_NULL_HANDLE)
+    {
+        throw std::runtime_error("failed to find a suitable GPU!");
+//      throw std::runtime_error("failed to find a suitable GPU!");
+    }
 }
 
 static inline void MainLoop(SceneData& sd)
