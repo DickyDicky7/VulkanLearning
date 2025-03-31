@@ -104,6 +104,10 @@ struct QueueFamilyIndices
 
 struct SceneData
 {
+    VkQueue vkGraphicsQueue = VK_NULL_HANDLE;
+//  VkQueue vkGraphicsQueue = VK_NULL_HANDLE;
+    VkDevice vkDevice = VK_NULL_HANDLE;
+//  VkDevice vkDevice = VK_NULL_HANDLE;
     VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
 //  VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT debugMessenger;
@@ -374,6 +378,67 @@ static inline void InitVulkan(SceneData& sd)
         throw std::runtime_error("failed to find a suitable GPU!");
 //      throw std::runtime_error("failed to find a suitable GPU!");
     }
+
+
+
+
+
+    const QueueFamilyIndices& queueFamilyIndices = FindQueueFamilies(sd.vkPhysicalDevice);
+//  const QueueFamilyIndices& queueFamilyIndices = FindQueueFamilies(sd.vkPhysicalDevice);
+    float queuePriority = 1.0f;
+//  float queuePriority = 1.0f;
+    VkDeviceQueueCreateInfo vkDeviceQueueCreateInfo
+    {
+        .sType            = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+//      .sType            = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+        .pNext            = nullptr,
+//      .pNext            = nullptr,
+//      .flags            = ,
+//      .flags            = ,
+        .queueFamilyIndex = queueFamilyIndices.graphicsFamily.value(),
+//      .queueFamilyIndex = queueFamilyIndices.graphicsFamily.value(),
+        .queueCount       = 1,
+//      .queueCount       = 1,
+        .pQueuePriorities = &queuePriority,
+//      .pQueuePriorities = &queuePriority,
+    };
+
+    VkPhysicalDeviceFeatures vkPhysicalDeviceFeatures{};
+//  VkPhysicalDeviceFeatures vkPhysicalDeviceFeatures{};
+
+    VkDeviceCreateInfo vkDeviceCreateInfo
+    {
+        .sType                   = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+//      .sType                   = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+        .pNext                   = nullptr,
+//      .pNext                   = nullptr,
+//      .flags                   = ,
+//      .flags                   = ,
+        .queueCreateInfoCount    = 1,
+//      .queueCreateInfoCount    = 1,
+        .pQueueCreateInfos       = &vkDeviceQueueCreateInfo,
+//      .pQueueCreateInfos       = &vkDeviceQueueCreateInfo,
+        .enabledLayerCount       = 0,
+//      .enabledLayerCount       = 0,
+//      .ppEnabledLayerNames     = ,
+//      .ppEnabledLayerNames     = ,
+        .enabledExtensionCount   = 0,
+//      .enabledExtensionCount   = 0,
+//      .ppEnabledExtensionNames = ,
+//      .ppEnabledExtensionNames = ,
+        .pEnabledFeatures        = &vkPhysicalDeviceFeatures,
+//      .pEnabledFeatures        = &vkPhysicalDeviceFeatures,
+    };
+
+    if (VkResult vkResult = vkCreateDevice(sd.vkPhysicalDevice, &vkDeviceCreateInfo, nullptr, &sd.vkDevice); vkResult != VkResult::VK_SUCCESS)
+//  if (VkResult vkResult = vkCreateDevice(sd.vkPhysicalDevice, &vkDeviceCreateInfo, nullptr, &sd.vkDevice); vkResult != VkResult::VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create logical device!");
+//      throw std::runtime_error("failed to create logical device!");
+    }
+
+    vkGetDeviceQueue(sd.vkDevice, sd.queueFamilyIndices.graphicsFamily.value(), 0, &sd.vkGraphicsQueue);
+//  vkGetDeviceQueue(sd.vkDevice, sd.queueFamilyIndices.graphicsFamily.value(), 0, &sd.vkGraphicsQueue);
 }
 
 static inline void MainLoop(SceneData& sd)
@@ -387,6 +452,9 @@ static inline void MainLoop(SceneData& sd)
 
 static inline void CleansUp(SceneData& sd)
 {
+    vkDestroyDevice(sd.vkDevice, nullptr);
+//  vkDestroyDevice(sd.vkDevice, nullptr);
+
     if (enableValidationLayers)
     {
         PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(sd.vkInstance, "vkDestroyDebugUtilsMessengerEXT");
