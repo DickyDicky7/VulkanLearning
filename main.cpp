@@ -1,5 +1,13 @@
-# define  GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+    #define VK_USE_PLATFORM_WIN32_KHR
+//  #define VK_USE_PLATFORM_WIN32_KHR
+    #define GLFW_INCLUDE_VULKAN
+//  #define GLFW_INCLUDE_VULKAN
+    #include <GLFW/glfw3.h>
+//  #include <GLFW/glfw3.h>
+    #define GLFW_EXPOSE_NATIVE_WIN32
+//  #define GLFW_EXPOSE_NATIVE_WIN32
+    #include <GLFW/glfw3native.h>
+//  #include <GLFW/glfw3native.h>
 
   #include <optional>
 //#include <optional>
@@ -7,6 +15,8 @@
 //#include <iostream>
   #include <vector>
 //#include <vector>
+  #include <set>
+//#include <set>
 
 
 const std::vector<const char*> validationLayers =
@@ -100,10 +110,14 @@ struct QueueFamilyIndices
 {
     std::optional<std::uint32_t> graphicsFamily;
 //  std::optional<std::uint32_t> graphicsFamily;
+    std::optional<std::uint32_t>  presentFamily;
+//  std::optional<std::uint32_t>  presentFamily;
 };
 
 struct SceneData
 {
+    VkQueue vkPresentQueue = VK_NULL_HANDLE;
+//  VkQueue vkPresentQueue = VK_NULL_HANDLE;
     VkQueue vkGraphicsQueue = VK_NULL_HANDLE;
 //  VkQueue vkGraphicsQueue = VK_NULL_HANDLE;
     VkDevice vkDevice = VK_NULL_HANDLE;
@@ -112,25 +126,25 @@ struct SceneData
 //  VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT debugMessenger;
 //  VkDebugUtilsMessengerEXT debugMessenger;
+    VkSurfaceKHR vkSurfaceKHR = VK_NULL_HANDLE;
+//  VkSurfaceKHR vkSurfaceKHR = VK_NULL_HANDLE;
     VkInstance  vkInstance;
 //  VkInstance  vkInstance;
     GLFWwindow* glfwWindow;
 //  GLFWwindow* glfwWindow;
     const char* windowTitle;
 //  const char* windowTitle;
-    QueueFamilyIndices queueFamilyIndices;
-//  QueueFamilyIndices queueFamilyIndices;
     std::uint32_t windowW = 800;
     std::uint32_t windowH = 600;
 };
 
 static inline bool IsComplete(const QueueFamilyIndices& queueFamilyIndices)
 {
-    return queueFamilyIndices.graphicsFamily.has_value();
-//  return queueFamilyIndices.graphicsFamily.has_value();
+    return queueFamilyIndices.graphicsFamily.has_value() && queueFamilyIndices.presentFamily.has_value();
+//  return queueFamilyIndices.graphicsFamily.has_value() && queueFamilyIndices.presentFamily.has_value();
 }
 
-static inline QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vkPhysicalDevice)
+static inline QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR)
 {
     QueueFamilyIndices queueFamilyIndices{};
 //  QueueFamilyIndices queueFamilyIndices{};
@@ -145,8 +159,8 @@ static inline QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vkPhysicalDe
     vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, queueFamilies.data());
 //  vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, queueFamilies.data());
 
-    int i = 0;
-//  int i = 0;
+    std::uint32_t i = 0;
+//  std::uint32_t i = 0;
     for (const VkQueueFamilyProperties& queueFamily : queueFamilies)
 //  for (const VkQueueFamilyProperties& queueFamily : queueFamilies)
     {
@@ -155,6 +169,16 @@ static inline QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vkPhysicalDe
         {
             queueFamilyIndices.graphicsFamily = i;
 //          queueFamilyIndices.graphicsFamily = i;
+        }
+        VkBool32 presentSupport = false;
+//      VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDevice, i, vkSurfaceKHR, &presentSupport);
+//      vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDevice, i, vkSurfaceKHR, &presentSupport);
+        if (presentSupport)
+//      if (presentSupport)
+        {
+            queueFamilyIndices.presentFamily = i;
+//          queueFamilyIndices.presentFamily = i;
         }
         if (IsComplete(queueFamilyIndices))
 //      if (IsComplete(queueFamilyIndices))
@@ -170,7 +194,7 @@ static inline QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vkPhysicalDe
 //  return queueFamilyIndices;
 }
 
-static inline bool IsVkPhysicalDeviceSuitable(VkPhysicalDevice vkPhysicalDevice)
+static inline bool IsVkPhysicalDeviceSuitable(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR)
 {
 //    VkPhysicalDeviceProperties vkPhysicalDeviceProperties;
 ////  VkPhysicalDeviceProperties vkPhysicalDeviceProperties;
@@ -188,8 +212,8 @@ static inline bool IsVkPhysicalDeviceSuitable(VkPhysicalDevice vkPhysicalDevice)
 //    return true;
 ////  return true;
 
-    const QueueFamilyIndices& queueFamilyIndices = FindQueueFamilies(vkPhysicalDevice);
-//  const QueueFamilyIndices& queueFamilyIndices = FindQueueFamilies(vkPhysicalDevice);
+    const QueueFamilyIndices& queueFamilyIndices = FindQueueFamilies(vkPhysicalDevice, vkSurfaceKHR);
+//  const QueueFamilyIndices& queueFamilyIndices = FindQueueFamilies(vkPhysicalDevice, vkSurfaceKHR);
     return IsComplete(queueFamilyIndices);
 //  return IsComplete(queueFamilyIndices);
 }
@@ -342,6 +366,36 @@ static inline void InitVulkan(SceneData& sd)
 
 
 
+
+
+/*
+    VkWin32SurfaceCreateInfoKHR vkWin32SurfaceCreateInfoKHR
+    {
+        .sType = VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+//      .sType = VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+        .hinstance = GetModuleHandle(nullptr),
+//      .hinstance = GetModuleHandle(nullptr),
+        .hwnd = glfwGetWin32Window(sd.glfwWindow),
+//      .hwnd = glfwGetWin32Window(sd.glfwWindow),
+    };
+    if (VkResult vkResult = vkCreateWin32SurfaceKHR(sd.vkInstance, &vkWin32SurfaceCreateInfoKHR, nullptr, &sd.vkSurfaceKHR); vkResult != VkResult::VK_SUCCESS)
+//  if (VkResult vkResult = vkCreateWin32SurfaceKHR(sd.vkInstance, &vkWin32SurfaceCreateInfoKHR, nullptr, &sd.vkSurfaceKHR); vkResult != VkResult::VK_SUCCESS)
+    {
+        throw std::runtime_error(std::format("failed to create window surface! reason: {}", static_cast<std::int32_t>(vkResult)));
+//      throw std::runtime_error(std::format("failed to create window surface! reason: {}", static_cast<std::int32_t>(vkResult)));
+    }
+*/
+    if (VkResult vkResult = glfwCreateWindowSurface(sd.vkInstance, sd.glfwWindow, nullptr, &sd.vkSurfaceKHR); vkResult != VkResult::VK_SUCCESS)
+//  if (VkResult vkResult = glfwCreateWindowSurface(sd.vkInstance, sd.glfwWindow, nullptr, &sd.vkSurfaceKHR); vkResult != VkResult::VK_SUCCESS)
+    {
+        throw std::runtime_error(std::format("failed to create window surface! reason: {}", static_cast<std::int32_t>(vkResult)));
+//      throw std::runtime_error(std::format("failed to create window surface! reason: {}", static_cast<std::int32_t>(vkResult)));
+    }
+
+
+
+
+
     std::uint32_t deviceCount = 0;
 //  std::uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(sd.vkInstance, &deviceCount, nullptr);
@@ -362,8 +416,8 @@ static inline void InitVulkan(SceneData& sd)
     for (const VkPhysicalDevice& vkPhysicalDevice : vkPhysicalDevices)
 //  for (const VkPhysicalDevice& vkPhysicalDevice : vkPhysicalDevices)
     {
-        if (IsVkPhysicalDeviceSuitable(vkPhysicalDevice))
-//      if (IsVkPhysicalDeviceSuitable(vkPhysicalDevice))
+        if (IsVkPhysicalDeviceSuitable(vkPhysicalDevice, sd.vkSurfaceKHR))
+//      if (IsVkPhysicalDeviceSuitable(vkPhysicalDevice, sd.vkSurfaceKHR))
         {
             sd.vkPhysicalDevice = vkPhysicalDevice;
 //          sd.vkPhysicalDevice = vkPhysicalDevice;
@@ -383,25 +437,34 @@ static inline void InitVulkan(SceneData& sd)
 
 
 
-    const QueueFamilyIndices& queueFamilyIndices = FindQueueFamilies(sd.vkPhysicalDevice);
-//  const QueueFamilyIndices& queueFamilyIndices = FindQueueFamilies(sd.vkPhysicalDevice);
+    const QueueFamilyIndices& queueFamilyIndices = FindQueueFamilies(sd.vkPhysicalDevice, sd.vkSurfaceKHR);
+//  const QueueFamilyIndices& queueFamilyIndices = FindQueueFamilies(sd.vkPhysicalDevice, sd.vkSurfaceKHR);
+    std::vector<VkDeviceQueueCreateInfo> vkDeviceQueueCreateInfos;
+//  std::vector<VkDeviceQueueCreateInfo> vkDeviceQueueCreateInfos;
+    std::set<std::uint32_t> uniqueQueueFamilies = { queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value(), };
+//  std::set<std::uint32_t> uniqueQueueFamilies = { queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value(), };
     float queuePriority = 1.0f;
 //  float queuePriority = 1.0f;
-    VkDeviceQueueCreateInfo vkDeviceQueueCreateInfo
+    for (std::uint32_t queueFamily : uniqueQueueFamilies)
+//  for (std::uint32_t queueFamily : uniqueQueueFamilies)
     {
-        .sType            = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-//      .sType            = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-        .pNext            = nullptr,
-//      .pNext            = nullptr,
-//      .flags            = ,
-//      .flags            = ,
-        .queueFamilyIndex = queueFamilyIndices.graphicsFamily.value(),
-//      .queueFamilyIndex = queueFamilyIndices.graphicsFamily.value(),
-        .queueCount       = 1,
-//      .queueCount       = 1,
-        .pQueuePriorities = &queuePriority,
-//      .pQueuePriorities = &queuePriority,
-    };
+        vkDeviceQueueCreateInfos.emplace_back(VkDeviceQueueCreateInfo
+//      vkDeviceQueueCreateInfos.emplace_back(VkDeviceQueueCreateInfo
+        {
+            .sType            = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+//          .sType            = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            .pNext            = nullptr,
+//          .pNext            = nullptr,
+//          .flags            = ,
+//          .flags            = ,
+            .queueFamilyIndex = queueFamily,
+//          .queueFamilyIndex = queueFamily,
+            .queueCount       = 1,
+//          .queueCount       = 1,
+            .pQueuePriorities = &queuePriority,
+//          .pQueuePriorities = &queuePriority,
+        });
+    }
 
     VkPhysicalDeviceFeatures vkPhysicalDeviceFeatures{};
 //  VkPhysicalDeviceFeatures vkPhysicalDeviceFeatures{};
@@ -414,10 +477,10 @@ static inline void InitVulkan(SceneData& sd)
 //      .pNext                   = nullptr,
 //      .flags                   = ,
 //      .flags                   = ,
-        .queueCreateInfoCount    = 1,
-//      .queueCreateInfoCount    = 1,
-        .pQueueCreateInfos       = &vkDeviceQueueCreateInfo,
-//      .pQueueCreateInfos       = &vkDeviceQueueCreateInfo,
+        .queueCreateInfoCount    = static_cast<std::uint32_t>(vkDeviceQueueCreateInfos.size()),
+//      .queueCreateInfoCount    = static_cast<std::uint32_t>(vkDeviceQueueCreateInfos.size()),
+        .pQueueCreateInfos       = vkDeviceQueueCreateInfos.data(),
+//      .pQueueCreateInfos       = vkDeviceQueueCreateInfos.data(),
         .enabledLayerCount       = 0,
 //      .enabledLayerCount       = 0,
 //      .ppEnabledLayerNames     = ,
@@ -437,8 +500,10 @@ static inline void InitVulkan(SceneData& sd)
 //      throw std::runtime_error("failed to create logical device!");
     }
 
-    vkGetDeviceQueue(sd.vkDevice, sd.queueFamilyIndices.graphicsFamily.value(), 0, &sd.vkGraphicsQueue);
-//  vkGetDeviceQueue(sd.vkDevice, sd.queueFamilyIndices.graphicsFamily.value(), 0, &sd.vkGraphicsQueue);
+    vkGetDeviceQueue(sd.vkDevice, queueFamilyIndices.graphicsFamily.value(), 0, &sd.vkGraphicsQueue);
+//  vkGetDeviceQueue(sd.vkDevice, queueFamilyIndices.graphicsFamily.value(), 0, &sd.vkGraphicsQueue);
+    vkGetDeviceQueue(sd.vkDevice, queueFamilyIndices.presentFamily.value(), 0, &sd.vkPresentQueue);
+//  vkGetDeviceQueue(sd.vkDevice, queueFamilyIndices.presentFamily.value(), 0, &sd.vkPresentQueue);
 }
 
 static inline void MainLoop(SceneData& sd)
@@ -467,6 +532,8 @@ static inline void CleansUp(SceneData& sd)
         }
     }
 
+    vkDestroySurfaceKHR(sd.vkInstance, sd.vkSurfaceKHR, nullptr);
+//  vkDestroySurfaceKHR(sd.vkInstance, sd.vkSurfaceKHR, nullptr);
     vkDestroyInstance(sd.vkInstance, nullptr);
 //  vkDestroyInstance(sd.vkInstance, nullptr);
     glfwDestroyWindow(sd.glfwWindow);
