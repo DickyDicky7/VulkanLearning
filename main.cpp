@@ -233,8 +233,8 @@ static inline void InitVulkan(SceneData& sd)
 {
     if (enableValidationLayers && !CheckSupportOfValidationLayers())
     {
-        throw std::runtime_error("validation layers requested but not available!");
-//      throw std::runtime_error("validation layers requested but not available!");
+        throw std::runtime_error(std::format("validation layers requested but not available!"));
+//      throw std::runtime_error(std::format("validation layers requested but not available!"));
     }
 
     // Create Vulkan Instance - connection between application and Vulkan driver
@@ -321,7 +321,8 @@ static inline void InitVulkan(SceneData& sd)
     }
     else
     {
-        throw std::runtime_error("!create vulkan instance failure!");
+        throw std::runtime_error(std::format("!create vulkan instance failure! reason: {}", static_cast<std::int32_t>(vkResult)));
+//      throw std::runtime_error(std::format("!create vulkan instance failure! reason: {}", static_cast<std::int32_t>(vkResult)));
     }
 
 
@@ -359,8 +360,8 @@ static inline void InitVulkan(SceneData& sd)
         if (createDebugUtilsMessengerEXTResult != VkResult::VK_SUCCESS)
 //      if (createDebugUtilsMessengerEXTResult != VkResult::VK_SUCCESS)
         {
-            throw std::runtime_error("failed to set up debug messenger!");
-//          throw std::runtime_error("failed to set up debug messenger!");
+            throw std::runtime_error(std::format("failed to set up debug messenger! reason: {}", static_cast<std::int32_t>(createDebugUtilsMessengerEXTResult)));
+//          throw std::runtime_error(std::format("failed to set up debug messenger! reason: {}", static_cast<std::int32_t>(createDebugUtilsMessengerEXTResult)));
         }
     }
 
@@ -404,8 +405,8 @@ static inline void InitVulkan(SceneData& sd)
     if (deviceCount == 0)
 //  if (deviceCount == 0)
     {
-        throw std::runtime_error("failed to find GPUs with Vulkan support!");
-//      throw std::runtime_error("failed to find GPUs with Vulkan support!");
+        throw std::runtime_error(std::format("failed to find GPUs with Vulkan support!"));
+//      throw std::runtime_error(std::format("failed to find GPUs with Vulkan support!"));
     }
 
     std::vector<VkPhysicalDevice> vkPhysicalDevices(deviceCount);
@@ -429,8 +430,8 @@ static inline void InitVulkan(SceneData& sd)
     if (sd.vkPhysicalDevice == VK_NULL_HANDLE)
 //  if (sd.vkPhysicalDevice == VK_NULL_HANDLE)
     {
-        throw std::runtime_error("failed to find a suitable GPU!");
-//      throw std::runtime_error("failed to find a suitable GPU!");
+        throw std::runtime_error(std::format("failed to find a suitable GPU!"));
+//      throw std::runtime_error(std::format("failed to find a suitable GPU!"));
     }
 
 
@@ -496,8 +497,8 @@ static inline void InitVulkan(SceneData& sd)
     if (VkResult vkResult = vkCreateDevice(sd.vkPhysicalDevice, &vkDeviceCreateInfo, nullptr, &sd.vkDevice); vkResult != VkResult::VK_SUCCESS)
 //  if (VkResult vkResult = vkCreateDevice(sd.vkPhysicalDevice, &vkDeviceCreateInfo, nullptr, &sd.vkDevice); vkResult != VkResult::VK_SUCCESS)
     {
-        throw std::runtime_error("failed to create logical device!");
-//      throw std::runtime_error("failed to create logical device!");
+        throw std::runtime_error(std::format("failed to create logical device! reason: {}", static_cast<std::int32_t>(vkResult)));
+//      throw std::runtime_error(std::format("failed to create logical device! reason: {}", static_cast<std::int32_t>(vkResult)));
     }
 
     vkGetDeviceQueue(sd.vkDevice, queueFamilyIndices.graphicsFamily.value(), 0, &sd.vkGraphicsQueue);
