@@ -138,6 +138,8 @@ struct SwapChainSupportDetails
 
 struct SceneData
 {
+    std::vector<VkImage> swapChainImages;
+//  std::vector<VkImage> swapChainImages;
     VkQueue vkPresentQueue = VK_NULL_HANDLE;
 //  VkQueue vkPresentQueue = VK_NULL_HANDLE;
     VkQueue vkGraphicsQueue = VK_NULL_HANDLE;
@@ -158,6 +160,10 @@ struct SceneData
 //  GLFWwindow* glfwWindow;
     const char* windowTitle;
 //  const char* windowTitle;
+    VkExtent2D swapChainExtent2D   ;
+//  VkExtent2D swapChainExtent2D   ;
+    VkFormat   swapChainImageFormat;
+//  VkFormat   swapChainImageFormat;
     std::uint32_t windowW = 800;
     std::uint32_t windowH = 600;
 };
@@ -756,6 +762,18 @@ static inline void InitVulkan(SceneData& sd)
         throw std::runtime_error(std::format("failed to create swap chain! reason: {}", static_cast<std::int32_t>(vkResult)));
 //      throw std::runtime_error(std::format("failed to create swap chain! reason: {}", static_cast<std::int32_t>(vkResult)));
     }
+
+    vkGetSwapchainImagesKHR(sd.vkDevice, sd.vkSwapchainKHR, &imageCount, nullptr);
+//  vkGetSwapchainImagesKHR(sd.vkDevice, sd.vkSwapchainKHR, &imageCount, nullptr);
+    sd.swapChainImages.resize(imageCount);
+//  sd.swapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(sd.vkDevice, sd.vkSwapchainKHR, &imageCount, sd.swapChainImages.data());
+//  vkGetSwapchainImagesKHR(sd.vkDevice, sd.vkSwapchainKHR, &imageCount, sd.swapChainImages.data());
+
+    sd.swapChainExtent2D = actualAvailableVkExtent2D;
+//  sd.swapChainExtent2D = actualAvailableVkExtent2D;
+    sd.swapChainImageFormat = bestAvailableVkSurfaceFormatKHR.format;
+//  sd.swapChainImageFormat = bestAvailableVkSurfaceFormatKHR.format;
 }
 
 static inline void MainLoop(SceneData& sd)
