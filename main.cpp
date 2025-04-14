@@ -140,6 +140,8 @@ struct SceneData
 {
     std::vector<VkImage> swapChainImages;
 //  std::vector<VkImage> swapChainImages;
+    std::vector<VkImageView> swapChainImageViews;
+//  std::vector<VkImageView> swapChainImageViews;
     VkQueue vkPresentQueue = VK_NULL_HANDLE;
 //  VkQueue vkPresentQueue = VK_NULL_HANDLE;
     VkQueue vkGraphicsQueue = VK_NULL_HANDLE;
@@ -847,6 +849,8 @@ static inline void MainLoop(SceneData& sd)
 
 static inline void CleansUp(SceneData& sd)
 {
+    for (const VkImageView& swapChainImageView : sd.swapChainImageViews) vkDestroyImageView(sd.vkDevice, swapChainImageView, nullptr);
+//  for (const VkImageView& swapChainImageView : sd.swapChainImageViews) vkDestroyImageView(sd.vkDevice, swapChainImageView, nullptr);
     vkDestroySwapchainKHR(sd.vkDevice, sd.vkSwapchainKHR, nullptr);
 //  vkDestroySwapchainKHR(sd.vkDevice, sd.vkSwapchainKHR, nullptr);
     vkDestroyDevice(sd.vkDevice, nullptr);
