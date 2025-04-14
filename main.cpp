@@ -774,6 +774,66 @@ static inline void InitVulkan(SceneData& sd)
 //  sd.swapChainExtent2D = actualAvailableVkExtent2D;
     sd.swapChainImageFormat = bestAvailableVkSurfaceFormatKHR.format;
 //  sd.swapChainImageFormat = bestAvailableVkSurfaceFormatKHR.format;
+
+
+
+
+
+
+
+
+
+
+    sd.swapChainImageViews.resize(sd.swapChainImages.size());
+//  sd.swapChainImageViews.resize(sd.swapChainImages.size());
+    VkComponentMapping vkComponentMapping
+//  VkComponentMapping vkComponentMapping
+    {
+        .r = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
+        .g = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
+        .b = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
+        .a = VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY,
+    };
+    VkImageSubresourceRange vkImageSubresourceRange
+//  VkImageSubresourceRange vkImageSubresourceRange
+    {
+        .aspectMask     = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT,
+//      .aspectMask     = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT,
+        .baseMipLevel   = 0,
+//      .baseMipLevel   = 0,
+        .levelCount     = 1,
+//      .levelCount     = 1,
+        .baseArrayLayer = 0,
+//      .baseArrayLayer = 0,
+        .layerCount     = 1,
+//      .layerCount     = 1,
+    };
+    for (std::size_t i = 0; i < sd.swapChainImages.size(); ++i)
+//  for (std::size_t i = 0; i < sd.swapChainImages.size(); ++i)
+    {
+        VkImageViewCreateInfo vkImageViewCreateInfo
+//      VkImageViewCreateInfo vkImageViewCreateInfo
+        {
+            .sType            = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+//          .sType            = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            .image            = sd.swapChainImages[i],
+//          .image            = sd.swapChainImages[i],
+            .viewType         = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,
+//          .viewType         = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,
+            .format           = bestAvailableVkSurfaceFormatKHR.format,
+//          .format           = bestAvailableVkSurfaceFormatKHR.format,
+            .components       = vkComponentMapping,
+//          .components       = vkComponentMapping,
+            .subresourceRange = vkImageSubresourceRange,
+//          .subresourceRange = vkImageSubresourceRange,
+        };
+        if (VkResult vkResult = vkCreateImageView(sd.vkDevice, &vkImageViewCreateInfo, nullptr, &sd.swapChainImageViews[i]); vkResult != VkResult::VK_SUCCESS)
+//      if (VkResult vkResult = vkCreateImageView(sd.vkDevice, &vkImageViewCreateInfo, nullptr, &sd.swapChainImageViews[i]); vkResult != VkResult::VK_SUCCESS)
+        {
+            throw std::runtime_error(std::format("failed to create image views! reason: {}", static_cast<std::int32_t>(vkResult)));
+//          throw std::runtime_error(std::format("failed to create image views! reason: {}", static_cast<std::int32_t>(vkResult)));
+        }
+    }
 }
 
 static inline void MainLoop(SceneData& sd)
